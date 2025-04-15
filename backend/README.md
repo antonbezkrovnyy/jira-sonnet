@@ -60,11 +60,12 @@ backend/
 
 ## Зависимости
 ```
-fastapi
-uvicorn
-pyyaml
-jira
-python-dotenv
+fastapi==0.109.0
+uvicorn==0.27.0
+pyyaml==6.0.1
+jira==3.5.2
+python-dotenv==1.0.0
+pydantic==2.5.3
 ```
 
 ## Локальное развертывание
