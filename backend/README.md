@@ -103,3 +103,40 @@ JIRA_URL=https://your-domain.atlassian.net
 JIRA_USER=your-email@domain.com
 JIRA_TOKEN=your-api-token
 ```
+
+## Тестирование
+
+### Структура тестов
+```
+backend/
+├── tests/
+│   ├── conftest.py         # Общие фикстуры
+│   ├── test_config/       # Тесты конфигурации
+│   ├── test_schemas/      # Тесты Pydantic моделей
+│   ├── test_api/         # Тесты эндпоинтов
+│   ├── test_jira/        # Тесты JIRA интеграции
+│   └── test_storage/     # Тесты YAML хранилища
+```
+
+### Запуск тестов
+```bash
+# Запуск всех тестов
+pytest
+
+# Запуск с покрытием
+pytest --cov=app
+
+# Запуск конкретного модуля
+pytest tests/test_api/
+
+# Запуск с подробным выводом
+pytest -v
+```
+
+### Переменные окружения для тестов
+Создайте файл `.env.test`:
+```
+JIRA_URL=https://test-domain.atlassian.net
+JIRA_USER=test@example.com
+JIRA_TOKEN=test-token
+```
