@@ -5,6 +5,19 @@ from app.services.jira import get_jira_client  # Add JIRA client import
 
 client = TestClient(app)
 
+@pytest.fixture
+def integration_env():
+    """Setup test data for integration tests"""
+    return {
+        'project_key': 'LOGIQPROD',  # Add this explicitly
+        'epic_key': 'LOGIQPROD-634',
+        'task_key': 'LOGIQPROD-635',
+        'issue_type': 'Engineer',
+        'epic_name': 'Клиент ГПНА',
+        'epic_summary': 'Клиент Газпромнефть Автоматизация',
+        'task_summary': 'Ошибка инсталляции ансибл логик у гпна'
+    }
+
 @pytest.mark.integration
 def test_jira_epic_data(integration_env):
     """Test raw JIRA data before testing API"""
