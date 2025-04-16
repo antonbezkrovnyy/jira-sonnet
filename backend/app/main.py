@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from .core.config import get_settings
 from .api.v1.tasks import router as tasks_router
 from .api.v1.epics import router as epics_router
+from .api.v1.labels import router as labels_router  # Проверяем правильность импорта
 
 def create_app() -> FastAPI:
     app = FastAPI(title="JIRA Sonnet API")
@@ -9,6 +10,7 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(tasks_router)
     app.include_router(epics_router)
+    app.include_router(labels_router)
     
     @app.get("/health")
     async def health_check() -> dict[str, str]:
