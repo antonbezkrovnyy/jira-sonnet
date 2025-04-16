@@ -16,11 +16,19 @@ def mock_jira_issue():
 @pytest.fixture
 def mock_jira_epic(mock_jira_issue):
     epic = mock_jira_issue
-    epic.fields.customfield_10014 = "Epic Name"
-    link1, link2 = Mock(), Mock()
-    link1.outwardIssue.key = "TEST-124"
-    link2.outwardIssue.key = "TEST-125"
-    epic.fields.issuelinks = [link1, link2]
+    # Правильное поле для имени эпика
+    epic.fields.customfield_10604 = "Epic Name"
+    
+    # Создаем связанные задачи
+    task1, task2 = Mock(), Mock()
+    task1.key = "TEST-124"
+    task2.key = "TEST-125"
+    
+    # Настраиваем возвращаемое значение для search_issues
+    mock_search = Mock()
+    mock_search.return_value = [task1, task2]
+    epic.search_issues = mock_search
+    
     return epic
 
 @pytest.mark.asyncio
@@ -35,9 +43,22 @@ async def test_get_task(mock_jira_issue):
 @pytest.mark.asyncio
 async def test_get_epic(mock_jira_epic):
     with patch('app.services.jira.get_jira_client') as mock_client:
+        # Настраиваем мок для получения эпика
         mock_client.return_value.issue.return_value = mock_jira_epic
+        
+        # Настраиваем мок для поиска задач
+        mock_client.return_value.search_issues.return_value = [
+            Mock(key="TEST-124"),
+            Mock(key="TEST-125")
+        ]
+        
+        # Вызываем тестируемую функцию
         epic = await get_epic("TEST-123")
+        
+        # Проверяем результат
         assert epic is not None
         assert epic.key == "TEST-123"
-        assert epic.name == "Epic Name"
-        assert len(epic.tasks) == 2
+        assert epic.name == "Epic Name"  # Проверяем имя эпика из customfield_10604
+        assert len(epic.tasks) == 2  # Проверяем количество связанных задач
+        assert "TEST-124" in epic.tasks  # Проверяем ключи задач
+        assert "TEST-125" in epic.tasks
