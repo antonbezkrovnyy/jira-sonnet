@@ -3,10 +3,23 @@ import os
 
 @pytest.fixture(autouse=True)
 def env_setup():
-    os.environ['JIRA_URL'] = 'http://test.com'
-    os.environ['JIRA_USER'] = 'test@test.com'
-    os.environ['JIRA_TOKEN'] = 'test-token'
+    # Сохраняем оригинальные значения
+    original_env = {
+        'JIRA_URL': os.environ.get('JIRA_URL'),
+        'JIRA_USER': os.environ.get('JIRA_USER'),
+        'JIRA_TOKEN': os.environ.get('JIRA_TOKEN')
+    }
+    
+    # Устанавливаем тестовые значения
+    os.environ['JIRA_URL'] = 'https://jira.jet.su'
+    os.environ['JIRA_USER'] = 'aa.bezkrovnyy'
+    os.environ['JIRA_TOKEN'] = 'Tkf$5sqlbch7h2v'
+    
     yield
-    os.environ.pop('JIRA_URL', None)
-    os.environ.pop('JIRA_USER', None)
-    os.environ.pop('JIRA_TOKEN', None)
+    
+    # Восстанавливаем оригинальные значения
+    for key, value in original_env.items():
+        if value is not None:
+            os.environ[key] = value
+        else:
+            os.environ.pop(key, None)
