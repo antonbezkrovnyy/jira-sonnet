@@ -40,7 +40,7 @@ def get_logger(name: str = "jira-sonnet") -> logging.Logger:
         handler = logging.StreamHandler(sys.stdout)
         handler.setFormatter(CustomFormatter())
         logger.addHandler(handler)
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)  # Changed from DEBUG to INFO
     
     return logger
 
