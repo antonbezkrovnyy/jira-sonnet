@@ -111,6 +111,47 @@ version: {version}
             logger.error(f"Error updating template {key}: {str(e)}")
             return None
 
+    def create_template(
+        self, 
+        type: ChecklistType, 
+        key: str,
+        name: str,
+        description: str,
+        content: str,
+        version: str = "1.0"
+    ) -> Optional[ChecklistTemplate]:
+        """Create new template file"""
+        try:
+            template_path = self.base_path / type.value / f"{key}.md"
+            if template_path.exists():
+                logger.warning(f"Template {key} already exists")
+                return None
+                
+            # Create directory if not exists
+            template_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Create template content
+            template_content = f"""---
+name: {name}
+description: {description}
+version: {version}
+---
+{content}"""
+
+            # Write to file
+            template_path.write_text(template_content, encoding='utf-8')
+            
+            # Parse and cache template
+            template = self._parse_template(template_path, type)
+            self.templates[type][key] = template
+            
+            logger.info(f"Created template: {key} ({type})")
+            return template
+            
+        except Exception as e:
+            logger.error(f"Error creating template {key}: {str(e)}")
+            return None
+
 # Global instance
 _template_service: Optional[TemplateService] = None
 

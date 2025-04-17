@@ -1,7 +1,7 @@
 ---
 name: Standard DoR
 description: Base Definition of Ready template
-version: 1.0
+version: "1.0"  # Теперь как строка
 ---
 ## Definition of Ready
 
@@ -9,4 +9,3 @@ version: 1.0
 * Критерии приемки определены
 * Оценка времени проведена
 * Зависимости выявлены и зафиксированы
-* Согласовано с владельцем продукта

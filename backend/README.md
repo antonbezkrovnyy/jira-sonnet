@@ -13,18 +13,22 @@ backend/
 │   │       ├── tasks.py     # Операции с задачами
 │   │       ├── epics.py     # Операции с эпиками
 │   │       ├── labels.py    # Операции с метками
-│   │       ├── dor_dod.py   # Операции с DoR/DoD
-│   │       └── links.py     # Операции с ссылками
+│   │       ├── templates.py # Управление шаблонами DoR/DoD
+│   │       └── links.py     # Операции со связями
 │   ├── services/
-│   │   └── jira.py         # Функции для работы с JIRA API
-│   ├── schemas/            # Pydantic модели
-│   │   ├── task.py        
-│   │   ├── epic.py
-│   │   ├── label.py
-│   │   ├── dor_dod.py
-│   │   └── link.py
-│   └── utils/
-       └── helpers.py       # Вспомогательные функции
+│   │   ├── jira.py         # JIRA API клиент
+│   │   ├── templates.py    # Управление шаблонами
+│   │   ├── tasks.py       # Операции с задачами
+│   │   └── labels.py      # Управление метками
+│   └── schemas/           # Pydantic модели
+       ├── task.py        
+       ├── epic.py
+       ├── label.py
+       ├── checklist.py   # Модели для DoR/DoD
+       └── link.py
+├── checklists/           # Шаблоны DoR/DoD
+│   ├── dor/             # Definition of Ready
+│   └── dod/             # Definition of Done
 ```
 
 ## Основные компоненты
@@ -33,7 +37,7 @@ backend/
 - `/api/v1/tasks/` - управление задачами
 - `/api/v1/epics/` - работа с эпиками
 - `/api/v1/labels/` - управление метками
-- `/api/v1/dor-dod/` - работа с DoR/DoD
+- `/api/v1/templates/` - управление шаблонами DoR/DoD
 - `/api/v1/links/` - управление ссылками
 
 ### Модели данных
@@ -41,11 +45,13 @@ Pydantic модели для валидации:
 - **TaskSchema**: модель задачи
 - **EpicSchema**: модель эпика
 - **LabelSchema**: модель метки
-- **DorDodSchema**: модель шаблона
+- **ChecklistTemplate**: модель шаблона DoR/DoD
 - **LinkSchema**: модель ссылки
 
 ### Хранение данных
-- **templates/**: YAML файлы с шаблонами DoR/DoD
+- **checklists/**: Markdown файлы с шаблонами DoR/DoD
+  - dor/: шаблоны Definition of Ready
+  - dod/: шаблоны Definition of Done
 - **settings/**: YAML файлы с настройками и метками
 
 ### Сервисы
@@ -54,12 +60,33 @@ Pydantic модели для валидации:
   - Обновление задач
   - Работа с комментариями
   - Управление метками
+- **TemplateService**: работа с шаблонами
+  - Загрузка шаблонов из файлов
+  - CRUD операции с шаблонами
+  - Кэширование шаблонов
 
 ## Функции API
-Асинхронные функции для работы с JIRA:
-- Получение и обновление задач/эпиков
-- Управление комментариями
-- Управление метками
+
+### Задачи
+- Создание задач с шаблонами DoR/DoD
+- Получение и обновление задач
+- Управление метками задач
+
+### Эпики
+- Получение информации об эпике
+- Список задач в эпике
+- Обновление статуса
+
+### Шаблоны DoR/DoD
+- Получение списка шаблонов
+- Создание шаблона
+- Обновление шаблона
+- Удаление шаблона
+
+### Метки
+- Получение списка меток
+- Информация об использовании метки
+- Поиск по меткам
 
 ## Эндпоинты API
 Роутеры FastAPI с валидацией Pydantic:
@@ -80,28 +107,38 @@ pydantic==2.5.3
 ```
 
 ## Локальное развертывание
-1. Создать виртуальное окружение:
+
+### Установка
+1. Клонировать репозиторий:
+```bash
+git clone https://github.com/your-username/jira-sonnet.git
+cd jira-sonnet
+```
+
+2. Создать виртуальное окружение:
 ```bash
 python -m venv venv
 .\venv\Scripts\activate
 ```
 
-2. Установить зависимости:
+3. Установить зависимости:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Запустить сервер разработки:
-```bash
-uvicorn app.main:app --reload
-```
-
-## Конфигурация
+### Конфигурация
 Создайте файл `.env` в корне проекта:
 ```
-JIRA_URL=https://your-domain.atlassian.net
-JIRA_USER=your-email@domain.com
+JIRA_SERVER=https://your-domain.atlassian.net
+JIRA_USERNAME=your-email@domain.com
 JIRA_TOKEN=your-api-token
+LOG_LEVEL=INFO
+```
+
+### Запуск
+```bash
+cd backend
+uvicorn app.main:app --reload
 ```
 
 ## Тестирование
@@ -111,32 +148,47 @@ JIRA_TOKEN=your-api-token
 backend/
 ├── tests/
 │   ├── conftest.py         # Общие фикстуры
-│   ├── test_config/       # Тесты конфигурации
-│   ├── test_schemas/      # Тесты Pydantic моделей
-│   ├── test_api/         # Тесты эндпоинтов
-│   ├── test_jira/        # Тесты JIRA интеграции
-│   └── test_storage/     # Тесты YAML хранилища
+│   ├── integration/       # Интеграционные тесты
+│   │   └── test_jira.py  # Тесты JIRA API
+│   └── test_api/         # Тесты эндпоинтов
+       ├── test_tasks.py
+       ├── test_epics.py
+       ├── test_labels.py
+       └── test_templates.py
 ```
 
 ### Запуск тестов
 ```bash
-# Запуск всех тестов
+# Все тесты
 pytest
 
-# Запуск с покрытием
-pytest --cov=app
-
-# Запуск конкретного модуля
-pytest tests/test_api/
-
-# Запуск с подробным выводом
+# С подробным выводом
 pytest -v
+
+# Конкретный модуль
+pytest tests/test_api/test_templates.py
+
+# С покрытием кода
+pytest --cov=app
 ```
 
 ### Переменные окружения для тестов
 Создайте файл `.env.test`:
 ```
-JIRA_URL=https://test-domain.atlassian.net
-JIRA_USER=test@example.com
+JIRA_SERVER=https://test.atlassian.net
+JIRA_USERNAME=test@example.com
 JIRA_TOKEN=test-token
+LOG_LEVEL=DEBUG
 ```
+
+## Логирование
+- Структурированные JSON логи
+- Уровни: DEBUG, INFO, WARNING, ERROR
+- Логирование запросов и ответов API
+- Отслеживание интеграции с JIRA
+
+## Безопасность
+- Аутентификация через JIRA API токен
+- Валидация входных данных
+- Безопасная обработка ошибок
+- Ограничение доступа к API

@@ -116,3 +116,85 @@ def test_delete_template_not_found(mock_template_service):
     response = client.delete("/api/v1/templates/dor/nonexistent")
     assert response.status_code == 404
     assert "Template nonexistent not found" in response.json()["detail"]
+
+def test_create_template_success(mock_template_service, caplog):
+    """Test successful template creation"""
+    mock_template = ChecklistTemplate(
+        key="new-template",
+        name="New Template",
+        description="Test template",
+        version="1.0",
+        type=ChecklistType.DOR,
+        content="* Test item 1\n* Test item 2"
+    )
+    mock_template_service.create_template.return_value = mock_template
+    
+    response = client.post(
+        "/api/v1/templates/dor",
+        json={
+            "key": "new-template",
+            "name": "New Template",
+            "description": "Test template",
+            "content": "* Test item 1\n* Test item 2",
+            "version": "1.0"
+        }
+    )
+    
+    assert response.status_code == 201
+    created = response.json()
+    assert created["key"] == "new-template"
+    assert created["name"] == "New Template"
+    assert created["content"] == "* Test item 1\n* Test item 2"
+
+def test_create_template_already_exists(mock_template_service):
+    """Test creating template that already exists"""
+    mock_template_service.create_template.return_value = None
+    
+    response = client.post(
+        "/api/v1/templates/dor",
+        json={
+            "key": "existing",
+            "name": "Existing Template",
+            "description": "Already exists",
+            "content": "* Test content",
+            "version": "1.0"
+        }
+    )
+    
+    assert response.status_code == 409
+    assert "Template existing already exists" in response.json()["detail"]
+
+def test_create_template_invalid_data():
+    """Test template creation with invalid data"""
+    response = client.post(
+        "/api/v1/templates/dor",
+        json={
+            "key": "test",  # Валидный ключ
+            "name": "Invalid Template",
+            # Пропускаем обязательное поле description
+            "content": "* Test content",
+            "version": "1.0"
+        }
+    )
+    
+    assert response.status_code == 422  # Validation error
+    errors = response.json()
+    assert "description" in str(errors["detail"])  # Проверяем что ошибка о пропущенном поле
+
+def test_create_template_service_error(mock_template_service):
+    """Test template creation with service error"""
+    mock_template_service.create_template.side_effect = Exception("Service error")
+    
+    response = client.post(
+        "/api/v1/templates/dor",
+        json={
+            "key": "error-test",
+            "name": "Error Test",
+            "description": "Service error test",
+            "content": "* Test content",
+            "version": "1.0"
+        }
+    )
+    
+    assert response.status_code == 500
+    assert "Failed to create template" in response.json()["detail"]

@@ -15,6 +15,14 @@ class UpdateTemplateRequest(BaseModel):
     content: str = Field(..., description="Template markdown content")
     version: str = Field(default="1.0", description="Template version")
 
+class CreateTemplateRequest(BaseModel):
+    """Request body for template creation"""
+    key: str = Field(..., description="Template file name without extension")
+    name: str = Field(..., description="Template display name")
+    description: str = Field(..., description="Template description")
+    content: str = Field(..., description="Template markdown content")
+    version: str = Field(default="1.0", description="Template version")
+
 @router.get("/{type}")
 async def list_templates(type: ChecklistType) -> List[ChecklistTemplate]:
     """Get all templates of specified type"""
@@ -128,4 +136,43 @@ async def delete_template(type: ChecklistType, key: str) -> bool:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete template"
+        )
+
+@router.post(
+    "/{type}",
+    response_model=ChecklistTemplate,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        409: {"description": "Template already exists"},
+        500: {"description": "Internal server error"}
+    }
+)
+async def create_template(
+    type: ChecklistType,
+    template: CreateTemplateRequest
+) -> ChecklistTemplate:
+    """Create new template"""
+    try:
+        service = get_template_service()
+        created = service.create_template(
+            type=type,
+            key=template.key,
+            name=template.name,
+            description=template.description,
+            content=template.content,
+            version=template.version
+        )
+        if not created:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Template {template.key} already exists"
+            )
+        return created
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating template: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create template"
         )
