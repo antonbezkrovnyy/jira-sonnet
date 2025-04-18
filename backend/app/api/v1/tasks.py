@@ -1,11 +1,16 @@
-from fastapi import APIRouter, HTTPException, status
-from typing import Dict, Optional
+from fastapi import APIRouter, HTTPException, status, Depends
+from typing import Dict, Optional, List
 from app.schemas.task import TaskSchema
+from app.schemas.create_task import CreateTaskRequest
 from app.services.jira import get_task
+from app.services.tasks import TasksService
 from app.core.logging import get_logger
 
 router = APIRouter(prefix="/api/v1/tasks", tags=["tasks"])
 logger = get_logger()
+
+def get_tasks_service():
+    return TasksService()
 
 @router.get(
     "/{key}",
@@ -43,3 +48,44 @@ async def read_task(key: str) -> TaskSchema:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch task from JIRA"
         )
+
+@router.post("/", response_model=dict)
+async def create_task(
+    request: CreateTaskRequest,
+    tasks_service: TasksService = Depends(get_tasks_service)
+):
+    """
+    Create new JIRA task
+    
+    Returns:
+        dict: Created task data including key and id
+    """
+    result = tasks_service.create_task(request)
+    if not result:
+        raise HTTPException(
+            status_code=400,
+            detail="Failed to create task"
+        )
+    return result
+
+@router.get("/types/{project_key}", response_model=List[dict])
+async def get_task_types(
+    project_key: str,
+    tasks_service: TasksService = Depends(get_tasks_service)
+):
+    """
+    Get available task types for project
+    
+    Args:
+        project_key: JIRA project key
+        
+    Returns:
+        List[dict]: List of available issue types with id and name
+    """
+    types = tasks_service.get_task_types(project_key)
+    if not types:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Project {project_key} not found or no task types available"
+        )
+    return types

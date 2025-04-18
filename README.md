@@ -1,7 +1,7 @@
 # JIRA Sonnet
 
 ## Документация
-- [Этапы разработки](development_stages.md)
+- [Создание задач](docs/task_creation.md)
 - [Интеграция с JIRA](docs/jira_integration.md)
 - [API документация](docs/api.md)
 
