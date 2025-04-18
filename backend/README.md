@@ -96,6 +96,52 @@ Pydantic модели для валидации:
 - DoR/DoD: работа с шаблонами
 - Ссылки: управление веб-ссылками
 
+## API Endpoints
+
+### Links API
+
+#### Get Task Links
+```http
+GET /api/v1/tasks/{task_key}/links
+```
+Returns all links (both JIRA and external) for the specified task.
+
+#### Create Task Link
+```http
+POST /api/v1/tasks/{task_key}/links
+```
+Creates a new link between two JIRA tasks.
+
+Request body:
+```json
+{
+    "type": "blocks",
+    "target": "PROJ-456"
+}
+```
+
+#### Get External Links
+```http
+GET /api/v1/tasks/{task_key}/external-links
+```
+Returns all external links (Confluence, web resources etc.) for the task.
+
+#### Create External Link
+```http
+POST /api/v1/tasks/{task_key}/external-links
+```
+Creates a new external link for the task.
+
+Request body:
+```json
+{
+    "type": "confluence",
+    "title": "Documentation",
+    "url": "https://confluence.example.com/page",
+    "target": "Page Title"
+}
+```
+
 ## Зависимости
 ```
 fastapi==0.109.0
